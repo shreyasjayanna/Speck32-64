@@ -1,7 +1,7 @@
 /*
  * DecryptFile.java
- * Date: 07-06-2014
- * v1.0
+ * Date: 07-10-2014
+ * v2.0
  * Author: Shreyas Jayanna
  */
 
@@ -35,10 +35,10 @@ public class DecryptFile {
      * @param key The original key
      */
     public void setKey(byte[] key) {
-        subkeys[0] = Packing.packShortBigEndian(key, 0);
-        l[0] = Packing.packShortBigEndian(key, 2);
-        l[1] = Packing.packShortBigEndian(key, 4);
-        l[2] = Packing.packShortBigEndian(key, 6);
+        subkeys[0] = Packing.packShortBigEndian(key, 6);
+        l[0] = Packing.packShortBigEndian(key, 4);
+        l[1] = Packing.packShortBigEndian(key, 2);
+        l[2] = Packing.packShortBigEndian(key, 0);
     }
 
     /**
@@ -64,26 +64,29 @@ public class DecryptFile {
      * @param ciphertext The ciphertext
      */
     public void decrypt(byte[] ciphertext) {
-        short p1 = Packing.packShortBigEndian(ciphertext, 0);
-        short p2 = Packing.packShortBigEndian(ciphertext, 2);
+        short p1 = Packing.packShortBigEndian(ciphertext,0);
+        short p2 = Packing.packShortBigEndian(ciphertext,2);
 
-        int temp1 = p1 & 65535;
-        int temp2 = p2 & 65535;
+        int temp1 = p1 & 0xFFFF;
+        int temp2 = p2 & 0xFFFF;
 
         int temp3;
 
-        for (int i = 21; i > -1; --i) {
-            temp3 = subkeys[i] & 65535;
+        for(int i = 21; i > -1; --i) {
+            temp3 = subkeys[i] & 0xFFFF;
 
-            p2 = (short) (((temp1 ^ temp2) >>> 2) | (temp1 ^ temp2) << (16 - 2));
-            temp2 = p2 & 65535;
+            p2 = (short) ((((temp1 ^ temp2) & 0xFFFF) >>> 2) | (((temp1 ^ temp2) & 0xFFFF) << (16-2)));
+            temp2 = p2 & 0xFFFF;
 
-            int temp4 = ((temp1 ^ temp3) - temp2);
-            p1 = (short) ((temp4 << 7) | (temp4 >>> (16 - 7)));
-            temp1 = p1 & 65535;
+            int temp4 = (((temp1 ^ temp3) & 0xFFFF) - temp2) & 0xFFFF;
+            p1 = (short) ((temp4 << 7) | (temp4 >>> (16-7)));
+            temp1 = p1 & 0xFFFF;
 
             //    System.out.printf("%s%s%n", Hex.toString(p1), Hex.toString(p2));
         }
+
+        Packing.unpackShortBigEndian(p1,ciphertext,0);
+        Packing.unpackShortBigEndian(p2,ciphertext,2);
     }
 
     /**
@@ -120,26 +123,27 @@ public class DecryptFile {
                 out.write(ciphertext);
             }
         }
+	in.close();
+	out.close();
 
-        if(count < 4) {
-            data[count++] = (byte) 0x80;
-            while(count < 4)
-                data[count++] = (byte) 0x00;
-            ciphertext = data.clone();
-            ef.decrypt(ciphertext);
-            out.write(ciphertext);
-        }
-        else {
-            count = 0;
-            data[count++] = (byte) 0x80;
-            while(count < 4)
-                data[count++] = (byte) 0x00;
-            ciphertext = data.clone();
-            ef.decrypt(ciphertext);
-            out.write(ciphertext);
-        }
 
-        in.close();
-        out.close();
+	// Remove padding by checking the last bytes of the plaintext, one byte at a time.
+	RandomAccessFile raf = new RandomAccessFile(ctfile,"rw");
+
+	raf.seek(ctfile.length()-1);
+
+	while(raf.readByte() == (byte) 0x00) {
+	    raf.setLength(raf.length()-1);
+	    raf.seek(raf.length()-1);
+	}
+
+	raf.seek(raf.length()-1);
+
+	if(raf.readByte() == (byte) 0x80) {
+	    raf.setLength(raf.length()-1);
+	}
+	
+	raf.close();
+
     }
 }

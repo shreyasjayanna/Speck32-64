@@ -1,7 +1,7 @@
 /*
  * EncyptFile.java
- * Date: 07-06-2014
- * v1.0
+ * Date: 07-10-2014
+ * v2.0
  * Author: Shreyas Jayanna
  */
 
@@ -35,10 +35,10 @@ public class EncryptFile {
      * @param key The original key
      */
     public void setKey(byte[] key) {
-        subkeys[0] = Packing.packShortBigEndian(key, 0);
-        l[0] = Packing.packShortBigEndian(key, 2);
-        l[1] = Packing.packShortBigEndian(key, 4);
-        l[2] = Packing.packShortBigEndian(key, 6);
+        subkeys[0] = Packing.packShortBigEndian(key, 6);
+        l[0] = Packing.packShortBigEndian(key, 4);
+        l[1] = Packing.packShortBigEndian(key, 2);
+        l[2] = Packing.packShortBigEndian(key, 0);
     }
 
     /**
@@ -121,15 +121,6 @@ public class EncryptFile {
         }
 
         if(count < 4) {
-            data[count++] = (byte) 0x80;
-            while(count < 4)
-                data[count++] = (byte) 0x00;
-            ciphertext = data.clone();
-            ef.encrypt(ciphertext);
-            out.write(ciphertext);
-        }
-        else {
-            count = 0;
             data[count++] = (byte) 0x80;
             while(count < 4)
                 data[count++] = (byte) 0x00;

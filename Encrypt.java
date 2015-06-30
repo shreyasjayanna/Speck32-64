@@ -1,26 +1,25 @@
 /*
  * Encrypt.java
- * Date: 07-06-2014
- * v1.0
+ * Date: 07-10-2014
+ * v2.0
  * Author: Shreyas Jayanna
  */
 
-// import statements
+// Import statements
 import edu.rit.util.Hex;
 import edu.rit.util.Packing;
 
 /**
  * Class Encrypt
- * This class defines the functionality for encrypting a given plaintext using a given key.
- * This algorithm implemented is SPECK32/64.
+ * This class defines the functionality to encrypt a plaintext as per SPECK32/64.
  */
 public class Encrypt {
 
-    short[] subkeys;    // Stores each round's subkeys
-    short[] l;          // Temporary array used in key scheduling
+    short[] subkeys;
+    short[] l;
 
     /**
-     * Encrypt
+     * EncryptFile
      * Constructor
      */
     Encrypt() {
@@ -34,10 +33,10 @@ public class Encrypt {
      * @param key The original key
      */
     public void setKey(byte[] key) {
-        subkeys[0] = Packing.packShortBigEndian(key, 0);
-        l[0] = Packing.packShortBigEndian(key, 2);
-        l[1] = Packing.packShortBigEndian(key, 4);
-        l[2] = Packing.packShortBigEndian(key, 6);
+        subkeys[0] = Packing.packShortBigEndian(key, 6);
+        l[0] = Packing.packShortBigEndian(key, 4);
+        l[1] = Packing.packShortBigEndian(key, 2);
+        l[2] = Packing.packShortBigEndian(key, 0);
     }
 
     /**
@@ -85,6 +84,7 @@ public class Encrypt {
     }
 
     /**
+     * main
      * The main method
      * @param args Command line arguments
      */
